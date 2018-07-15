@@ -34,32 +34,4 @@ public class MongoDBConnection {
         }
         return db;
     }
-
-    public void insert() {
-        BasicDBObject doc = new BasicDBObject("username", "higormed").
-                append("nome", "Higor Medeiros").
-                append("cidade", "Porto Alegre");
-
-        DBCollection collec = db.getCollection("dados");
-
-        collec.insert(doc);
-
-        //lista as coleções
-        DBCursor cursor = collec.find();
-        int i = 1;
-        while (cursor.hasNext()) {
-            System.out.println("Documento Inserido: " + i);
-            System.out.println(cursor.next());
-            i++;
-        }
-
-        System.out.println("Banco de dados armazenados:");
-        List<String> dbs = mongo.getDatabaseNames();
-        for (String dbStr : dbs) {
-            System.out.println(dbStr);
-        }
-
-        System.out.println("fim execucao");
-
-    }
 }
