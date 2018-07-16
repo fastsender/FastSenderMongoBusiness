@@ -9,6 +9,7 @@ import com.mongodb.DBObject;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+import java.util.HashMap;
 import java.util.List;
 import org.apache.log4j.Logger;
 
@@ -18,41 +19,106 @@ import org.apache.log4j.Logger;
 public class XmlBoImpl implements XmlBoInterf {
 
     private static Logger LOG4J = Logger.getLogger(XmlBoImpl.class);
+
+    private List<DBObject> xmlNfseList;
+    private HashMap<String, Object> xmlNfseHash;
+    private HashMap<String, Object> dataHoraInclusao;
+    private HashMap<String, Object> situacao;
+
+    private Calendar c = new GregorianCalendar();
+    private BasicDBObject doc = new BasicDBObject();
     
-    List<DBObject> xmlNfseList;
+    private List<String> xmlList = null;
     
     @Override
-    public List<DBObject> recuperaXmls(DB dbMongo){
-        try{
+    public List<DBObject> recuperaXmls(DB dbMongo) {
+        try {
             LOG4J.info("INICIANDO CONSULTA XML NFSE PENDENTES");
             xmlNfseList = new ArrayList<>();
-            DBCollection collec = dbMongo.getCollection("dados");
+            DBCollection collec = dbMongo.getCollection("xmlNfse");
             DBCursor cursor = collec.find();
             cursor.forEachRemaining(c -> this.xmlNfseList.add(c));
             LOG4J.info("FINALIZADA CONSULTA XML NFSE PENDENTES");
             return xmlNfseList;
-        }catch(Exception e){
-            LOG4J.info("ERRO AO CONSULTAR XML NFSE PENDENTES ->"+e.getMessage());
+        } catch (Exception e) {
+            LOG4J.info("ERRO AO CONSULTAR XML NFSE PENDENTES ->" + e.getMessage());
             return null;
         }
     }
 
     @Override
     public void inserirXml(DB dbMongo, List<String> xmlList) {
-        
-        LOG4J.info("GRAVANDO XMLS RECEBIDOS VIA WEB-SERVICE - [QUANTIDADE XML]: " +xmlList.size());
-            
-        Calendar c = new GregorianCalendar();
-        BasicDBObject doc = new BasicDBObject();
-        xmlList.forEach(xml->{
-            doc.append("xml_nfse", xml)
-               .append("data_hora_inclusao", c.getTime())
-               .append("situacao", 0);
-        });
-    DBCollection collec = dbMongo.getCollection("xmlNfse");
+        LOG4J.info("GRAVANDO XMLS RECEBIDOS VIA WEB-SERVICE - [QUANTIDADE XML]: " + xmlList.size());
+        retornaNfseHash(xmlList);
+        retornaDataInclusao(xmlList);
+        retornaSituacao(xmlList);
+        DBCollection collec = dbMongo.getCollection("xmlNfse");
         collec.insert(doc);
-        
-        LOG4J.info("XMLS INSERIDOS COM SUCESSO - [QUANTIDADE XML]:"+xmlList.size());
-        
+        doc = null;
+        LOG4J.info("XMLS INSERIDOS COM SUCESSO - [QUANTIDADE XML]:" + xmlList.size());
     }
+
+    public void retornaNfseHash(List<String> xmlList){
+        HashMap<String, Object> nfseHash;
+        nfseHash = new HashMap<>();
+        setXmlNfseHash(null);
+        xmlList.forEach(xml -> {
+            nfseHash.put("xml_nfse", xml);
+        }); 
+        
+        nfseHash.forEach((t, u) -> {
+           doc.append(t, u);
+        });
+    }    
+    
+    public void retornaDataInclusao(List<String> xmlList){
+        HashMap<String, Object> nfseDataInclusao;
+        nfseDataInclusao = new HashMap<>();
+        xmlList.forEach(xml -> {
+            nfseDataInclusao.put("data_hora_inclusao", xml);
+
+        }); 
+
+        nfseDataInclusao.forEach((t, u) -> {
+           doc.append(t, u);
+        });
+    }
+    
+    public void retornaSituacao(List<String> xmlList){
+        HashMap<String, Object> nfseSituacao;
+        nfseSituacao = new HashMap<>();
+        xmlList.forEach(xml -> {
+            getSituacao().put("situacao", "0");
+        });
+        
+       nfseSituacao.forEach((t, u) -> {
+           doc.append(t, u);
+        });
+    }
+    
+    public HashMap<String, Object> getXmlNfseHash() {
+        return xmlNfseHash != null ? new HashMap<>() : xmlNfseHash;
+    }
+
+    public void setXmlNfseHash(HashMap<String, Object> xmlNfseHash) {
+        this.xmlNfseHash = xmlNfseHash;
+    }
+
+    public HashMap<String, Object> getDataHoraInclusao() {
+        return dataHoraInclusao != null ? new HashMap<>() : dataHoraInclusao;
+    }
+
+    public void setDataHoraInclusao(HashMap<String, Object> dataHoraInclusao) {
+        this.dataHoraInclusao = dataHoraInclusao;
+    }
+
+    public HashMap<String, Object> getSituacao() {
+        return situacao != null ? new HashMap<>() : situacao;
+    }
+
+    public void setSituacao(HashMap<String, Object> situacao) {
+        this.situacao = situacao;
+    }
+    
+    
 }
