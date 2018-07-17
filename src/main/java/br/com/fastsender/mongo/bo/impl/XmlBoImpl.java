@@ -26,10 +26,11 @@ public class XmlBoImpl implements XmlBoInterf {
     private HashMap<String, Object> situacao;
 
     private Calendar c = new GregorianCalendar();
-    private BasicDBObject doc = new BasicDBObject();
-    
+    private BasicDBObject doc;
+
     private List<String> xmlList = null;
-    
+    private int i = 0;
+    private int count;
     @Override
     public List<DBObject> recuperaXmls(DB dbMongo) {
         try {
@@ -37,7 +38,9 @@ public class XmlBoImpl implements XmlBoInterf {
             xmlNfseList = new ArrayList<>();
             DBCollection collec = dbMongo.getCollection("xmlNfse");
             DBCursor cursor = collec.find();
-            cursor.forEachRemaining(c -> this.xmlNfseList.add(c));
+            cursor.forEachRemaining(c -> 
+                    testeCount(c)
+            );
             LOG4J.info("FINALIZADA CONSULTA XML NFSE PENDENTES");
             return xmlNfseList;
         } catch (Exception e) {
@@ -45,57 +48,64 @@ public class XmlBoImpl implements XmlBoInterf {
             return null;
         }
     }
-
+    public void testeCount(DBObject c){
+        i++;
+        System.out.println("XML["+i+"] LIDO ==>"+ c.toString());
+    }
+    
     @Override
-    public void inserirXml(DB dbMongo, List<String> xmlList) {
-        LOG4J.info("GRAVANDO XMLS RECEBIDOS VIA WEB-SERVICE - [QUANTIDADE XML]: " + xmlList.size());
-        retornaNfseHash(xmlList);
-        retornaDataInclusao(xmlList);
-        retornaSituacao(xmlList);
+    public void inserirXml(DB dbMongo, String xml) {
+        LOG4J.info("GRAVANDO XMLS RECEBIDOS VIA WEB-SERVICE - [QUANTIDADE XML]: ");
+        doc = new BasicDBObject();
+        doc.append("xml_nfse", xml).
+            append("data_hora_inclusao", c.getTime())
+            .append("situacao", 0);
+        
         DBCollection collec = dbMongo.getCollection("xmlNfse");
         collec.insert(doc);
-        doc = null;
-        LOG4J.info("XMLS INSERIDOS COM SUCESSO - [QUANTIDADE XML]:" + xmlList.size());
+        count++;
+        LOG4J.info("XML NUMERO ["+count+"] INSERIDO COM SUCESSO");
+        System.out.println("XML NUMERO ["+count+"] INSERIDO COM SUCESSO");
     }
 
-    public void retornaNfseHash(List<String> xmlList){
+    public void retornaNfseHash(List<String> xmlList) {
         HashMap<String, Object> nfseHash;
         nfseHash = new HashMap<>();
         setXmlNfseHash(null);
         xmlList.forEach(xml -> {
             nfseHash.put("xml_nfse", xml);
-        }); 
-        
-        nfseHash.forEach((t, u) -> {
-           doc.append(t, u);
         });
-    }    
-    
-    public void retornaDataInclusao(List<String> xmlList){
+
+        nfseHash.forEach((t, u) -> {
+            doc.append(t, u);
+        });
+    }
+
+    public void retornaDataInclusao(List<String> xmlList) {
         HashMap<String, Object> nfseDataInclusao;
         nfseDataInclusao = new HashMap<>();
         xmlList.forEach(xml -> {
             nfseDataInclusao.put("data_hora_inclusao", xml);
 
-        }); 
+        });
 
         nfseDataInclusao.forEach((t, u) -> {
-           doc.append(t, u);
+            doc.append(t, u);
         });
     }
-    
-    public void retornaSituacao(List<String> xmlList){
+
+    public void retornaSituacao(List<String> xmlList) {
         HashMap<String, Object> nfseSituacao;
         nfseSituacao = new HashMap<>();
         xmlList.forEach(xml -> {
-            getSituacao().put("situacao", "0");
+            nfseSituacao.put("situacao", "0");
         });
-        
-       nfseSituacao.forEach((t, u) -> {
-           doc.append(t, u);
+
+        nfseSituacao.forEach((t, u) -> {
+            doc.append(t, u);
         });
     }
-    
+
     public HashMap<String, Object> getXmlNfseHash() {
         return xmlNfseHash != null ? new HashMap<>() : xmlNfseHash;
     }
@@ -119,6 +129,5 @@ public class XmlBoImpl implements XmlBoInterf {
     public void setSituacao(HashMap<String, Object> situacao) {
         this.situacao = situacao;
     }
-    
-    
+
 }

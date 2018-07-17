@@ -11,6 +11,6 @@ public interface XmlBoInterf {
     
     public List<DBObject> recuperaXmls(DB dbMongo);
     
-    public void inserirXml(DB dbMongo, List<String> xml);
+    public void inserirXml(DB dbMongo, String xml);
    
 }
